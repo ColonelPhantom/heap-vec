@@ -279,6 +279,7 @@ impl<T: Clone> Clone for HeapVec<T> {
 
             let mut new_hv = Self{ptr: Unique::new(ptr as *mut T)};
             *new_hv.get_cap_mut() = self.capacity();
+            *new_hv.get_len_mut() = 0;
             for v in self.iter() {
                 new_hv.push(v.clone());
             }
