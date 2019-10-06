@@ -150,7 +150,34 @@ impl<T> HeapVec<T> {
         }
     }
 
+    pub fn insert(&mut self, index: usize, elem: T) {
+        assert!(index <= self.len(), "index out of bounds");
+        if self.capacity() == self.len() { self.grow(); }
 
+        unsafe {
+            if index < self.len() {
+                // ptr::copy(src, dest, len): "copy from source to dest len elems"
+                std::ptr::copy(self.get_offset_of(index),
+                        self.get_offset_of(index + 1),
+                        self.len() - index);
+            }
+            std::ptr::write(self.get_offset_of(index), elem);
+        }
+        *self.get_len_mut() += 1;
+    }
+
+    pub fn remove(&mut self, index: usize) -> T {
+        // Note: `<` because it's *not* valid to remove after everything
+        assert!(index < self.len(), "index out of bounds");
+        unsafe {
+            *self.get_len_mut() -= 1;
+            let result = std::ptr::read(self.get_offset_of(index));
+            std::ptr::copy(self.get_offset_of(index + 1),
+                    self.get_offset_of(index),
+                    self.len() - index);
+            result
+        }
+    }
 }
 
 impl<T> Drop for HeapVec<T> {
