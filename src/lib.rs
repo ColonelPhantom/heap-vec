@@ -158,7 +158,7 @@ impl<T> HeapVec<T> {
 
                 self.ptr = Unique::new(ptr as *mut T);
                 *self.get_cap_mut() = 1;
-
+                *self.get_len_mut() = 0;
             } else {
                 let old_cap = self.capacity();
                 let new_cap = old_cap * 2;
