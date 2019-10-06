@@ -17,6 +17,8 @@ mod tests {
         hv.push(1);
         assert_eq!(hv.len(), 2);
 
+        let hvc = hv.clone();
+
 
         assert_eq!(hv[0], 0);
         assert_eq!(hv[1], 1);
@@ -25,7 +27,9 @@ mod tests {
         assert_eq!(hv.len(), 1);
         assert_eq!(hv.pop(), Some(0));
         assert_eq!(hv.len(), 0);
-        assert_eq!(hv.pop(), None)
+        assert_eq!(hv.pop(), None);
+        
+        assert_eq!(hvc[..], [0, 1]);
     }
 
     #[test]
@@ -255,6 +259,30 @@ impl<T> DerefMut for HeapVec<T> {
     fn deref_mut(&mut self) -> &mut [T] {
         unsafe {
             std::slice::from_raw_parts_mut(self.get_offset_of(0), self.len())
+        }
+    }
+}
+
+impl<T: Clone> Clone for HeapVec<T> {
+    fn clone(&self) -> Self {
+        unsafe {
+            let cap_size = Self::get_offset();
+            let elem_size = mem::size_of::<T>();
+            let align = std::cmp::max(mem::align_of::<T>(), mem::align_of::<usize>());
+            let num_bytes = cap_size + elem_size * self.capacity();
+
+            let ptr = alloc::alloc(alloc::Layout::from_size_align(num_bytes, align).expect("Couldn't create layout!"));
+
+            if ptr.is_null() {
+                panic!("Allocation failed!");
+            } 
+
+            let mut new_hv = Self{ptr: Unique::new(ptr as *mut T)};
+            *new_hv.get_cap_mut() = self.capacity();
+            for v in self.iter() {
+                new_hv.push(v.clone());
+            }
+            new_hv
         }
     }
 }
