@@ -41,7 +41,7 @@ pub struct HeapVec<T> {
 
 impl<T> HeapVec<T> {
     pub fn new() -> Self {
-        assert!(std::mem::size_of::<T>() >= std::mem::size_of::<usize>(), "We're not ready to handle types smaller than usize!");
+        assert!(std::mem::size_of::<T>() != 0, "We're not ready to handle types with size 0!");
         Self { ptr: Unique::new(0 as *mut T)}
     }
 
@@ -52,6 +52,7 @@ impl<T> HeapVec<T> {
     const fn get_offset() -> usize {
         // Round up sizeof(usize) * 2 to a multiple of alignof(T)
         // * 2 is because there is both len and cap
+        // The division is (a + b - 1) / b which is ceiling integer division.
         ((mem::size_of::<usize>()*2 + mem::align_of::<T>() - 1) / mem::align_of::<T>()) * mem::align_of::<T>()
     }
 
@@ -93,9 +94,9 @@ impl<T> HeapVec<T> {
 
     fn grow(&mut self) {
         unsafe {
-            let align = std::cmp::max(mem::align_of::<T>(), mem::align_of::<usize>());
-            let elem_size = mem::size_of::<T>();
             let cap_size = Self::get_offset();
+            let elem_size = mem::size_of::<T>();
+            let align = std::cmp::max(mem::align_of::<T>(), mem::align_of::<usize>());
 
 
             if self.ptr.is_null() {
@@ -214,3 +215,7 @@ impl<T> DerefMut for HeapVec<T> {
     }
 }
 
+
+// TODO: implement IntoIter
+// TODO: implement Drain
+// TODO: support types with size 0
