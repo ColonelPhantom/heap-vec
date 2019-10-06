@@ -3,6 +3,8 @@ name = "heap-vec"
 version = "0.1.0"
 authors = ["Quinten Kock <quintenkock@gmail.com>"]
 edition = "2018"
+license = "MIT"
+description = "Vector that stores capacity and len on the heap, to reduce stack  size of empty vecs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
