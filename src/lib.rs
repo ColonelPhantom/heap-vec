@@ -1,9 +1,53 @@
 #[cfg(test)]
 mod tests {
+    use crate::HeapVec;
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn size_ok() {
+        use std::mem::size_of;
+        assert_eq!(size_of::<*mut u8>(), size_of::<HeapVec<u8>>());
     }
+
+    #[test]
+    fn insert_test() {
+        let mut hv: crate::HeapVec<u8> = crate::HeapVec::new();
+        assert_eq!(hv.len(), 0);
+        hv.push(0);
+        assert_eq!(hv.len(), 1);
+
+        hv.push(1);
+        assert_eq!(hv.len(), 2);
+
+
+        assert_eq!(hv[0], 0);
+        assert_eq!(hv[1], 1);
+
+        assert_eq!(hv.pop(), Some(1));
+        assert_eq!(hv.len(), 1);
+        assert_eq!(hv.pop(), Some(0));
+        assert_eq!(hv.len(), 0);
+        assert_eq!(hv.pop(), None)
+    }
+
+    #[test]
+    #[should_panic(expected = "droppanic.drop()")]
+    fn test_drop_panic() {
+        // This test should only panic once, and not double panic,
+        // which would mean a double drop
+        struct DropPanic {
+            test: u8
+        };
+        // TODO: make DropPanic a zero-sized type.
+
+        impl Drop for DropPanic {
+            fn drop(&mut self) {
+                panic!("droppanic.drop()");
+
+            }
+        }
+
+        let mut v = HeapVec::new();
+        v.push(DropPanic{test: 0});
+    } 
 }
 
 use std::marker::PhantomData;
